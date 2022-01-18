@@ -22,6 +22,8 @@ var folders_excluded : Array[String] = []
 
 var annotations_list : Array[String] = []
 
+var refresh_time : float = 10.0
+
 var annotations_area_name : String = ""
 
 var _is_processing : bool = false
@@ -35,6 +37,7 @@ func _enter_tree() -> void:
 		annotations_list = config.get_value("parameters", "annotations_list", ["TODO", "FIXME", "BUG"])
 		folders_excluded = config.get_value("parameters", "folders_excluded", [])
 		annotations_area_name = config.get_value("parameters", "dock_name", "AnnotationsTree")
+		refresh_time = config.get_value("parameters", "refresh_time", 10.0)
 	
 	# Add UI to the dock
 	annotations_area = load("res://addons/annotations_tree/annotations_area.tscn").instantiate()
@@ -45,7 +48,7 @@ func _enter_tree() -> void:
 	add_control_to_dock(EditorPlugin.DOCK_SLOT_LEFT_BR, annotations_area)
 	
 	timer = Timer.new()
-	timer.wait_time = 5.0
+	timer.wait_time = refresh_time
 	timer.one_shot = false
 	timer.timeout.connect(update_annotations_tree)
 	add_child(timer)
@@ -93,7 +96,8 @@ func get_all_files(base_path: String) -> Dictionary:
 					files_found[file_name] = "%s%s" % [base_path, file_name]
 			file_name = dir.get_next()
 	else:
-		push_error("An error occurred when trying to access the path: '%s'." % [base_path])
+		# Access to the path raise an error, no file will be processed
+		pass
 	return files_found
 
 
@@ -185,7 +189,7 @@ func open_script(file_path: String, line_number: int = -1) -> void:
 	var script_editor := get_editor_interface().get_script_editor()
 	var current_script := script_editor.get_current_script()
 	
-	if current_script.resource_path != file_path:
+	if current_script == null or current_script.resource_path != file_path:
 		var open_scripts := script_editor.get_open_scripts() as Array
 		var script_to_open : Resource = null
 		
@@ -194,11 +198,11 @@ func open_script(file_path: String, line_number: int = -1) -> void:
 				script_to_open = script
 		
 		if script_to_open == null:
-			script_to_open = Resource.new()
-			script_to_open.resource_path = file_path
+			script_to_open = ResourceLoader.load(file_path)
 			
-		get_editor_interface().edit_resource(script_to_open)
-	
-	if line_number != -1:
-		# goto_line() seem to start counting line at 0
+		get_editor_interface().edit_script(script_to_open, line_number)
+		
+	else:
+		# goto_line() seem to count line from 0
 		get_editor_interface().get_script_editor().goto_line(line_number - 1) 
+
