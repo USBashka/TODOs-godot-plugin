@@ -11,23 +11,29 @@ __meta__ = {
 }
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
-offset_left = 7.0
-offset_top = 7.0
-offset_right = 1017.0
-offset_bottom = 593.0
+offset_right = 1024.0
+offset_bottom = 600.0
+
+[node name="CheckButton" type="CheckButton" parent="VBoxContainer"]
+offset_right = 1024.0
+offset_bottom = 31.0
+text = "See only open scripts"
+alignment = 1
 
 [node name="AnnotationFilter" type="MenuButton" parent="VBoxContainer"]
-offset_right = 1010.0
-offset_bottom = 29.0
+offset_top = 35.0
+offset_right = 1024.0
+offset_bottom = 66.0
 shortcut_in_tooltip = false
 text = "Filter annotations"
 flat = false
 
 [node name="AnnotationTree" type="Tree" parent="VBoxContainer"]
-offset_top = 33.0
-offset_right = 1010.0
-offset_bottom = 586.0
+offset_top = 70.0
+offset_right = 1024.0
+offset_bottom = 600.0
 rect_min_size = Vector2(100, 50)
 size_flags_vertical = 3
 
+[connection signal="toggled" from="VBoxContainer/CheckButton" to="." method="_on_check_button_toggled"]
 [connection signal="item_selected" from="VBoxContainer/AnnotationTree" to="." method="_on_tree_item_selected"]

@@ -4,6 +4,8 @@ extends PanelContainer
 
 signal open_script_selected(file_path, line_number)
 
+signal only_search_open_files_setting_changed(new_value)
+
 var godot_theme : Theme
 
 @onready
@@ -27,8 +29,9 @@ func _ready() -> void:
 		item_id += 1
 	popup_menu.id_pressed.connect(_on_annotation_item_pressed)
 	
-	var menu_button_icon = godot_theme.get_icon("MenuButton", 'EditorIcons')
-	annotation_filter_node.icon = menu_button_icon
+	if godot_theme != null:
+		var menu_button_icon = godot_theme.get_icon("MenuButton", 'EditorIcons')
+		annotation_filter_node.icon = menu_button_icon
 
 
 ## Add annotations to [member annotation_tree]
@@ -121,3 +124,7 @@ func _on_tree_item_selected() -> void:
 	else:
 		# Else : cliqued on a directory
 		pass
+
+
+func _on_check_button_toggled(button_pressed: bool) -> void:
+	only_search_open_files_setting_changed.emit(button_pressed)

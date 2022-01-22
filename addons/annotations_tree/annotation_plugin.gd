@@ -28,6 +28,8 @@ var annotations_area_name : String = ""
 
 var _is_processing : bool = false
 
+var _search_open_files_only : bool = false
+
 func _enter_tree() -> void:
 	# load configurations
 	var config = ConfigFile.new()
@@ -42,7 +44,8 @@ func _enter_tree() -> void:
 	# Add UI to the dock
 	annotations_area = load("res://addons/annotations_tree/annotations_area.tscn").instantiate()
 	annotations_area.godot_theme = get_editor_interface().get_base_control().theme as Theme
-	annotations_area.open_script_selected.connect(open_script)
+	annotations_area.open_script_selected.connect(_on_open_script_selected)
+	annotations_area.only_search_open_files_setting_changed.connect(_on_only_search_open_files_setting_changed)
 	annotations_area.set_annotation_list(annotations_list.duplicate(true))
 	annotations_area.name = annotations_area_name
 	add_control_to_dock(EditorPlugin.DOCK_SLOT_LEFT_BR, annotations_area)
@@ -83,21 +86,36 @@ func _exit_tree() -> void:
 ##
 func get_all_files(base_path: String) -> Dictionary:
 	var files_found := {}
-	var dir := Directory.new()
-	if dir.open(base_path) == OK:
-		dir.list_dir_begin()
-		var file_name = dir.get_next()
-		while file_name != "":
-			if dir.current_is_dir():
-				if ("%s%s" % [base_path, file_name]) not in folders_excluded:
-					files_found[file_name] = get_all_files("%s%s/" % [base_path, file_name])
-			else:
-				if file_name.ends_with(".gd"):
-					files_found[file_name] = "%s%s" % [base_path, file_name]
-			file_name = dir.get_next()
+	if _search_open_files_only:
+		var script_editor := get_editor_interface().get_script_editor()
+		var opened_scripts := script_editor.get_open_scripts() as Array
+		for opened_script in opened_scripts:
+			var full_path = (opened_script as Script).resource_path
+			var splited_path = full_path.trim_prefix(base_path).split("/")
+			var current_used_dict_level = files_found
+			for path_ele in splited_path:
+				if path_ele.ends_with(".gd"):
+					current_used_dict_level[path_ele] = full_path
+				else:
+					if path_ele not in current_used_dict_level:
+						current_used_dict_level[path_ele] = {}
+					current_used_dict_level = current_used_dict_level[path_ele]
 	else:
-		# Access to the path raise an error, no file will be processed
-		pass
+		var dir := Directory.new()
+		if dir.open(base_path) == OK:
+			dir.list_dir_begin()
+			var file_name = dir.get_next()
+			while file_name != "":
+				if dir.current_is_dir():
+					if ("%s%s" % [base_path, file_name]) not in folders_excluded:
+						files_found[file_name] = get_all_files("%s%s/" % [base_path, file_name])
+				else:
+					if file_name.ends_with(".gd"):
+						files_found[file_name] = "%s%s" % [base_path, file_name]
+				file_name = dir.get_next()
+		else:
+			# Access to the path raise an error, no file will be processed
+			pass
 	return files_found
 
 
@@ -183,9 +201,10 @@ func update_annotations_tree() -> void:
 		annotations_area.set_annotation_data(annotations_data.duplicate(true))
 		_is_processing = false
 
+
 ## Open the script file at the line_number
 ## If line_number is -1, the script is just opened
-func open_script(file_path: String, line_number: int = -1) -> void:
+func _on_open_script_selected(file_path: String, line_number: int = -1) -> void:
 	var script_editor := get_editor_interface().get_script_editor()
 	var current_script := script_editor.get_current_script()
 	
@@ -206,3 +225,7 @@ func open_script(file_path: String, line_number: int = -1) -> void:
 		# goto_line() seem to count line from 0
 		get_editor_interface().get_script_editor().goto_line(line_number - 1) 
 
+
+func _on_only_search_open_files_setting_changed(new_value: bool) -> void:
+	_search_open_files_only = new_value
+	update_annotations_tree()
