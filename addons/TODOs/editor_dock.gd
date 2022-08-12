@@ -1,6 +1,12 @@
 @tool
-class_name AnnotationsArea
+class_name TODOsDock
 extends PanelContainer
+
+## Editor dock panel that shows current TODOs
+##
+## Plugin adds this panel to the bottom left side of the editor.
+##
+## @tutorial(How to use it): https://github.com/USBashka/TODOs-godot-plugin/blob/master/README.md
 
 signal open_script_selected(file_path, line_number)
 

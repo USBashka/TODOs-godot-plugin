@@ -1,14 +1,11 @@
 [gd_scene load_steps=2 format=3 uid="uid://ct1ykyf00v6r3"]
 
-[ext_resource type="Script" path="res://addons/annotations_tree/annotations_area.gd" id="1_id54t"]
+[ext_resource type="Script" path="res://addons/TODOs/editor_dock.gd" id="1_yhjkt"]
 
-[node name="AnnotationsArea" type="PanelContainer"]
+[node name="TODOsDock" type="PanelContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource( "1_id54t" )
-__meta__ = {
-"_edit_use_anchors_": false
-}
+script = ExtResource("1_yhjkt")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 offset_right = 1024.0
@@ -32,7 +29,6 @@ flat = false
 offset_top = 70.0
 offset_right = 1024.0
 offset_bottom = 600.0
-rect_min_size = Vector2(100, 50)
 size_flags_vertical = 3
 
 [connection signal="toggled" from="VBoxContainer/CheckButton" to="." method="_on_check_button_toggled"]
